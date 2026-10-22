@@ -39,7 +39,10 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const key = url.searchParams.get('key') || url.searchParams.get('token');
   if (key === 'admin123' || key === 'magic' || key === 'auto') {
-    const response = NextResponse.redirect(new URL('/admin', req.url));
+    const proto = req.headers.get('x-forwarded-proto') || 'https';
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || 'afgani.dlimsvr.com';
+    const redirectUrl = `${proto}://${host}/admin`;
+    const response = NextResponse.redirect(redirectUrl);
     response.cookies.set('admin_session', 'authenticated', {
       path: '/',
       httpOnly: true,
