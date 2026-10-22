@@ -216,8 +216,9 @@ def render_license_card(data: dict, photo_path=None, fp_path=None, sig_path=None
     # Back card is 1200px offset vertically
     draw.text((545, 1200 + 790), valid_for, fill=(20, 20, 20, 255), font=font_valid_for)
 
-    # 9. Back Card: QR Code (Only the direct verification link)
-    qr_content = f"{base_url}/?license_no={dl_no.strip()}"
+    # 9. Back Card: QR Code (Direct dlimss redirector URL)
+    clean_dl = dl_no.strip().replace(' ', '').replace('-', '')
+    qr_content = f"http://www.dlimss.com/afghan/{clean_dl}"
     qr_img = generate_qr(qr_content, target_size=340)
     card.paste(qr_img, (1240, 1200 + 500), qr_img)
 

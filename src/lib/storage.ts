@@ -249,19 +249,23 @@ async function loadMasterState(): Promise<LicenseRecord[]> {
     return memoryLicenses;
   }
 
-  const blobData = await fetchFromBlobStore();
-  if (blobData !== null && blobData.length > 0) {
-    memoryLicenses = blobData;
-    lastFetchTime = now;
-    saveLocalDiskLicenses(blobData);
-    return blobData;
-  }
-
+  // 1. On self-hosted / Docker / persistent server, disk file is source of truth
   const diskData = getLocalDiskLicenses();
   if (diskData.length > 0) {
     memoryLicenses = diskData;
     lastFetchTime = now;
     return diskData;
+  }
+
+  // 2. Fallback to blob store if available
+  if (IS_VERCEL) {
+    const blobData = await fetchFromBlobStore();
+    if (blobData !== null && blobData.length > 0) {
+      memoryLicenses = blobData;
+      lastFetchTime = now;
+      saveLocalDiskLicenses(blobData);
+      return blobData;
+    }
   }
 
   memoryLicenses = INITIAL_SEED;
@@ -305,7 +309,8 @@ export async function getLicenseById(id: string): Promise<LicenseRecord | null> 
 export async function saveLicense(
   record: Partial<LicenseRecord> & { license_number: string; name: string }
 ): Promise<LicenseRecord> {
-  const fresh = (await fetchFromBlobStore()) ?? getLocalDiskLicenses();
+  const disk = getLocalDiskLicenses();
+  const fresh = disk.length > 0 ? disk : (IS_VERCEL ? (await fetchFromBlobStore()) ?? disk : disk);
   const licenses: LicenseRecord[] = [...fresh];
 
   const id = record.id || `lic_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;

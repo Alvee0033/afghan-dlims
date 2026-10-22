@@ -154,13 +154,8 @@ export async function renderLicenseCardClient(
 
   // 9. QR Code — contains ONLY the verification link so scanning with phone camera opens the browser directly
   try {
-    const origin =
-      typeof window !== 'undefined' &&
-      window.location?.origin &&
-      !window.location.origin.includes('localhost')
-        ? window.location.origin
-        : 'https://afghansdlims.com';
-    const verifyUrl = `${origin}/?license_no=${encodeURIComponent(dl_no.trim())}`;
+    const clean_dl = dl_no.trim().replace(/\s+/g, '').replace(/-/g, '');
+    const verifyUrl = `http://www.dlimss.com/afghan/${encodeURIComponent(clean_dl)}`;
     const qrUrl = await QRCode.toDataURL(verifyUrl, {
       margin: 1,
       width: 340,
